@@ -23,13 +23,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         info = await client.system_info()
         _LOGGER.info("2N system info: %s", info)
         # Fetch device ports and create a device object
-        # You may need to adjust this if Py2NDevice is required
         device_data = await client.switch_status()  # or another method that returns ports
-        device = type("Device", (), {"data": device_data})()  # simple dynamic object with .data
+        _LOGGER.debug("Raw device data from switch_status: %s", device_data)
+        # Build a device object with required attributes
+        # You may need to adjust keys based on actual API response
+        device_obj = type("Device", (), {
+            "data": type("DeviceData", (), {
+                "serial": info.get("serial", "unknown"),
+                "mac": info.get("mac", "unknown"),
+                "name": info.get("name", "2N Helios"),
+                "model": info.get("model", "unknown"),
+                "hardware": info.get("hardware", "unknown"),
+                "firmware": info.get("firmware", "unknown"),
+                "ports": device_data.get("ports", [])
+            })()
+        })()
         hass.data[DOMAIN][entry.entry_id] = {
             "client": client,
             "coordinator": coordinator,
-            "device": device
+            "device": device_obj
         }
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         _LOGGER.info("2N Helios integration setup complete for host: %s", entry.data.get(CONF_HOST))
