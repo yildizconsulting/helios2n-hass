@@ -35,7 +35,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Use correct keys from API response
         info_result = info.get("result", {}) if isinstance(info, dict) else {}
         switch_result = device_data.get("result", {}) if isinstance(device_data, dict) else {}
-        switches = switch_result.get("switches", [])
+        switches = []
+        for sw in switch_result.get("switches", []):
+            # Ensure each switch has id, name, and state
+            switch_id = sw.get("id")
+            switch_name = sw.get("name", f"Relay {sw.get('id', '?')}")
+            switch_state = sw.get("state", "unknown")
+            switches.append({
+                "id": switch_id,
+                "name": switch_name,
+                "state": switch_state
+            })
+            log_debug("Found switch: id=%s, name=%s, state=%s", switch_id, switch_name, switch_state)
         device_obj = type("Device", (), {
             "data": type("DeviceData", (), {
                 "serial": info_result.get("serialNumber", "unknown"),
