@@ -38,8 +38,17 @@ class HapiCoordinator:
         log_debug("Pulling events from log...")
         events = await self.client.log_pull() or []
         log_debug("Events pulled: %s", events)
+        # Handle error response gracefully
+        if isinstance(events, dict) and not events.get("success", True):
+            log_debug("Log pull error: %s", events.get("error"))
+            return
+        if not isinstance(events, list):
+            log_debug("Events is not a list, skipping event processing.")
+            return
         for e in events:
-            t = (e.get("Type") or e.get("type") or "").lower()
-            self.hass.bus.async_fire("my2n_event", e)
-            log_debug("Fired event: %s", e)
+            if isinstance(e, dict):
+                self.hass.bus.async_fire("my2n_event", e)
+                log_debug("Fired event: %s", e)
+            else:
+                log_debug("Event is not a dict: %s", e)
             # update your sensors here (ring/motion/input)

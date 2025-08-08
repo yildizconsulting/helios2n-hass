@@ -1,6 +1,6 @@
 {
   "domain": "helios2n_hass",
-  "name": "Helios 2N (MSH) Integration",
+  "name": "2N IP Intercom(MSH) Integration",
   "version": "0.0.1",
   "config_flow": true,
   "documentation": "https://github.com/yildizconsulting/helios2n-hass",

@@ -31,8 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         info = await client.system_info()
         _LOGGER.info("2N system info: %s", info)
         log_debug("Fetched system info: %s", info)
+        log_debug("Full system_info response: %s", info)
         device_data = await client.switch_status()
-        log_debug("Raw device data from switch_status: %s", device_data)
+        log_debug("Full switch_status response: %s", device_data)
         device_obj = type("Device", (), {
             "data": type("DeviceData", (), {
                 "serial": info.get("serial", "unknown"),
