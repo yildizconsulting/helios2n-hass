@@ -29,20 +29,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_start()
         log_debug("HapiCoordinator started.")
         info = await client.system_info()
-        _LOGGER.info("2N system info: %s", info)
-        log_debug("Fetched system info: %s", info)
         log_debug("Full system_info response: %s", info)
         device_data = await client.switch_status()
         log_debug("Full switch_status response: %s", device_data)
+        # Use correct keys from API response
+        info_result = info.get("result", {}) if isinstance(info, dict) else {}
+        switch_result = device_data.get("result", {}) if isinstance(device_data, dict) else {}
+        switches = switch_result.get("switches", [])
         device_obj = type("Device", (), {
             "data": type("DeviceData", (), {
-                "serial": info.get("serial", "unknown"),
-                "mac": info.get("mac", "unknown"),
-                "name": info.get("name", "2N Helios"),
-                "model": info.get("model", "unknown"),
-                "hardware": info.get("hardware", "unknown"),
-                "firmware": info.get("firmware", "unknown"),
-                "ports": device_data.get("ports", [])
+                "serial": info_result.get("serialNumber", "unknown"),
+                "mac": info_result.get("mac", "unknown"),
+                "name": info_result.get("deviceName", "2N Helios"),
+                "model": info_result.get("model", "unknown"),
+                "hardware": info_result.get("hwVersion", "unknown"),
+                "firmware": info_result.get("swVersion", "unknown"),
+                "ports": switches
             })()
         })()
         log_debug("Device object created: %s", device_obj)
