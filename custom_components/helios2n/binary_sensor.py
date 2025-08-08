@@ -10,22 +10,30 @@ from homeassistant.const import Platform
 
 from py2n import Py2NDevice
 
-from .const import DOMAIN
+from .const import DOMAIN, DEBUG_ENABLED
 from .coordinator import HapiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM = Platform.BINARY_SENSOR
+
+def log_debug(msg, *args):
+    if DEBUG_ENABLED:
+        _LOGGER.debug(msg, *args)
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigType, async_add_entities: AddEntitiesCallback):
     entry_id = config.entry_id
     data = hass.data[DOMAIN][entry_id]
     device = data["device"]
     coordinator = data["coordinator"]
+    log_debug("Setting up binary sensor entities for entry_id: %s", entry_id)
     entities = []
     for port in getattr(device.data, "ports", []):
+        log_debug("Found port: %s", port)
         if getattr(port, "type", None) == "input":
+            log_debug("Adding binary sensor entity for port: %s", getattr(port, "id", None))
             entities.append(Helios2nPortBinarySensorEntity(coordinator, device, getattr(port, "id", None)))
     async_add_entities(entities)
+    log_debug("Added %d binary sensor entities.", len(entities))
     return True
 
 class Helios2nPortBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
