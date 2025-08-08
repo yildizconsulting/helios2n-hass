@@ -3,24 +3,30 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from .const import DOMAIN, PLATFORMS
 from .client import LocalHapiClient
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
-    
-    # Create the client instance using configuration data
-    client = LocalHapiClient(
-        hass=hass,
-        host=entry.data[CONF_HOST],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD]
-    )
-    
-    # Store the client instance
-    hass.data[DOMAIN][entry.entry_id] = client
-    
-    # Set up the platform entries
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
+    _LOGGER.info("Setting up 2N Helios integration for host: %s", entry.data.get(CONF_HOST))
+    try:
+        client = LocalHapiClient(
+            hass=hass,
+            host=entry.data[CONF_HOST],
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD]
+        )
+        # Optional: test connection
+        info = await client.system_info()
+        _LOGGER.info("2N system info: %s", info)
+        hass.data[DOMAIN][entry.entry_id] = client
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        _LOGGER.info("2N Helios integration setup complete for host: %s", entry.data.get(CONF_HOST))
+        return True
+    except Exception as e:
+        _LOGGER.error("Error setting up 2N Helios integration: %s", e, exc_info=True)
+        return False
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
