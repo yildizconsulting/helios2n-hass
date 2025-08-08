@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from py2n import Py2NDevice
 
 from .const import DOMAIN
-from .coordinator import Helios2nPortDataUpdateCoordinator
+from .coordinator import HapiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM = Platform.SWITCH
@@ -20,7 +20,7 @@ PLATFORM = Platform.SWITCH
 async def async_setup_entry(hass: HomeAssistant, config: ConfigType, async_add_entities: AddEntitiesCallback):
     device: Py2NDevice
     device: Py2NDevice = hass.data[DOMAIN][config.entry_id]
-    coordinator: Helios2nPortDataUpdateCoordinator = hass.data[DOMAIN][PLATFORM]["coordinator"]
+    coordinator: HapiCoordinator = hass.data[DOMAIN][PLATFORM]["coordinator"]
     entities = []
     for port in device.data.ports:
         if port.type == "output":
@@ -32,7 +32,7 @@ class Helios2nPortSwitchEntity(CoordinatorEntity, SwitchEntity):
     _attr_has_entity_name = True
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, coordinator: Helios2nPortDataUpdateCoordinator, device: Py2NDevice, port_id: str) -> None:
+    def __init__(self, coordinator: HapiCoordinator, device: Py2NDevice, port_id: str) -> None:
         super().__init__(coordinator)
         self._device = device
         self._attr_unique_id = f"{self._device.data.serial}_port_{port_id}"
