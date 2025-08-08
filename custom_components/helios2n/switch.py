@@ -20,12 +20,12 @@ PLATFORM = Platform.SWITCH
 async def async_setup_entry(hass: HomeAssistant, config: ConfigType, async_add_entities: AddEntitiesCallback):
     entry_id = config.entry_id
     data = hass.data[DOMAIN][entry_id]
-    device = data["client"]
+    device = data["device"]
     coordinator = data["coordinator"]
     entities = []
-    for port in device.data.ports:
-        if port.type == "output":
-            entities.append(Helios2nPortSwitchEntity(coordinator, device, port.id))
+    for port in getattr(device.data, "ports", []):
+        if getattr(port, "type", None) == "output":
+            entities.append(Helios2nPortSwitchEntity(coordinator, device, getattr(port, "id", None)))
     async_add_entities(entities)
     return True
 
